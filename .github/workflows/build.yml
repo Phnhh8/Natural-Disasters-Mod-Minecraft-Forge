@@ -1,4 +1,4 @@
-name: Build Forge 26.3 Mod
+name: Build Forge 1.21.4 Mod
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -18,5 +18,5 @@ jobs:
       - name: Upload Mod File
         uses: actions/upload-artifact@v4
         with:
-          name: naturaldisasters-forge-26.3
+          name: naturaldisasters-forge-1.21.4
           path: build/libs/*.jar
