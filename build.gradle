@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        maven { url = 'https://maven.minecraftforge.net/' }
+        maven { url = 'https://minecraftforge.net' }
         mavenCentral()
     }
     dependencies {
@@ -21,10 +21,10 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 minecraft {
-    mappings channel: 'official', version: '26.3'
+    mappings channel: 'official', version: '1.21.4'
     runs {
         client {}
         server { args '--nogui' }
@@ -32,5 +32,5 @@ minecraft {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:26.3-62.0.0"
+    minecraft "net.minecraftforge:forge:1.21.4-54.1.0"
 }
