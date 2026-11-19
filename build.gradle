@@ -12,15 +12,6 @@ plugins {
     id 'java-library'
 }
 
-repositories {
-    maven { url = 'https://maven.minecraftforge.net/' }
-    mavenCentral()
-}
-
-def forgeConf = configurations.detachedConfiguration(dependencies.create("net.minecraftforge:forge:[26.3,26.4)"))
-forgeConf.transitive = false
-def resolvedForgeVersion = forgeConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
-
 apply plugin: 'net.minecraftforge.gradle'
 
 version = mod_version
@@ -41,5 +32,5 @@ minecraft {
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${resolvedForgeVersion}"
+    minecraft "net.minecraftforge:forge:26.3-62.0.0"
 }
