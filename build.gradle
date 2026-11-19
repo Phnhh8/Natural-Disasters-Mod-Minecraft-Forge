@@ -1,13 +1,10 @@
 buildscript {
     repositories {
-        maven {
-            name = 'MinecraftForge'
-            url = 'https://minecraftforge.net'
-        }
+        maven { url = 'https://maven.minecraftforge.net/' }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '7.0.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.29', changing: true
     }
 }
 
@@ -16,10 +13,7 @@ plugins {
 }
 
 repositories {
-    maven {
-        name = 'MinecraftForge'
-        url = 'https://minecraftforge.net'
-    }
+    maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
 }
 
