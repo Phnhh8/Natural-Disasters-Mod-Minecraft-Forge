@@ -1,10 +1,13 @@
 buildscript {
     repositories {
-        maven { url = 'https://minecraftforge.net' }
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0.24,8.0)', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.29', changing: true
     }
 }
 
@@ -19,6 +22,14 @@ group = mod_group_id
 
 base {
     archivesName = mod_id
+}
+
+repositories {
+    maven {
+        name = 'MinecraftForge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+    mavenCentral()
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
