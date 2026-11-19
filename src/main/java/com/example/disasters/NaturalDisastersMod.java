@@ -7,7 +7,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -18,7 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
+import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -80,6 +79,13 @@ public class NaturalDisastersMod {
             out.accept(DISASTER_STOPPER.get());
         }).build()
     );
+
+    public NaturalDisastersMod(FMLJavaModLoadingContext context) {
+        IEventBus modEventBus = context.getModEventBus();
+        ITEMS.register(modEventBus);
+        TABS.register(modEventBus);
+        MinecraftForge.EVENT_BUS.register(this);
+    }
     public static class DisasterItem extends Item {
         private final String type;
         public DisasterItem(Properties props, String type) { super(props); this.type = type; }
@@ -98,7 +104,7 @@ public class NaturalDisastersMod {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("disaster").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
+        event.getDispatcher().register(Commands.literal("disaster").requires(s -> s.hasPermission(2))
             .then(Commands.argument("type", StringArgumentType.word()).executes(ctx -> {
                 startDisaster(ctx.getSource().getLevel(), StringArgumentType.getString(ctx, "type").toUpperCase(), BlockPos.containing(ctx.getSource().getPosition()));
                 return 1;
@@ -222,7 +228,7 @@ public class NaturalDisastersMod {
         }
         for (Entity e : level.getEntities(null, new AABB(tornadoPos.x - 18, tornadoPos.y - 5, tornadoPos.z - 18, tornadoPos.x + 18, tornadoPos.y + 35, tornadoPos.z + 18))) {
             double dx = tornadoPos.x - e.getX(), dz = tornadoPos.z - e.getZ();
-            e.setDeltaMovement(new Vec3(dx * 0.08 - dz * 0.12, 0.35, dz * 0.08 + dx * 0.12)); e.needsSync = true;
+            e.setDeltaMovement(new Vec3(dx * 0.08 - dz * 0.12, 0.35, dz * 0.08 + dx * 0.12)); e.hurtMarked = true;
         }
     }
 
@@ -239,7 +245,7 @@ public class NaturalDisastersMod {
             level.explode(null, targetPos.getX(), targetPos.getY(), targetPos.getZ(), 22f, true, Level.ExplosionInteraction.BLOCK);
             for (LivingEntity le : level.getEntitiesOfClass(LivingEntity.class, new AABB(targetPos).inflate(45))) {
                 le.addEffect(new MobEffectInstance(MobEffects.WITHER, 300, 1));
-                le.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 300, 0));
+                le.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 300, 0));
                 le.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
             }
         } else level.sendParticles(ParticleTypes.ASH, targetPos.getX(), targetPos.getY() + 15, targetPos.getZ(), 80, 20, 10, 20, 0.02);
@@ -256,7 +262,7 @@ public class NaturalDisastersMod {
                 }
             }
             case "EARTHQUAKE" -> {
-                p.setDeltaMovement(p.getDeltaMovement().add((RANDOM.nextDouble() - 0.5) * 0.4, 0.15, (RANDOM.nextDouble() - 0.5) * 0.4)); p.needsSync = true;
+                p.setDeltaMovement(p.getDeltaMovement().add((RANDOM.nextDouble() - 0.5) * 0.4, 0.15, (RANDOM.nextDouble() - 0.5) * 0.4)); p.hurtMarked = true;
                 if (disasterDuration % 5 == 0) {
                     BlockPos cp = pos.offset(RANDOM.nextInt(12) - 6, -1, RANDOM.nextInt(12) - 6);
                     if (!level.getBlockState(cp).isAir() && level.getBlockState(cp).getDestroySpeed(level, cp) >= 0) level.destroyBlock(cp, false);
@@ -289,7 +295,7 @@ public class NaturalDisastersMod {
             }
             case "BLIZZARD" -> {
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.getX(), pos.getY() + 6, pos.getZ(), 60, 12, 5, 12, 0.05);
-                p.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 1));
+                p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
                 if (disasterDuration % 10 == 0 && level.canSeeSky(pos)) p.hurt(level.damageSources().freeze(), 1.0f);
                 for (int i = 0; i < 5; i++) {
                     BlockPos fp = pos.offset(RANDOM.nextInt(20) - 10, -1, RANDOM.nextInt(20) - 10);
@@ -306,10 +312,3 @@ public class NaturalDisastersMod {
         }
     }
 }
-
-    public NaturalDisastersMod(FMLJavaModLoadingContext context) {
-        IEventBus modEventBus = context.getModEventBus();
-        ITEMS.register(modEventBus);
-        TABS.register(modEventBus);
-        MinecraftForge.EVENT_BUS.register(this);
-    }
