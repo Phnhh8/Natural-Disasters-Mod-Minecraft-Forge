@@ -94,7 +94,7 @@ public class NaturalDisastersMod {
             if (!level.isClientSide() && level instanceof ServerLevel sl) {
                 if (type.equals("STOP")) {
                     activeDisaster = "NONE"; disasterDuration = 0; tornadoPos = null; targetPos = null;
-                    player.sendSystemMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"));
+                    player.displayClientMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"), false);
                 } else startDisaster(sl, type, player.blockPosition());
                 player.getCooldowns().addCooldown(this.getDefaultInstance(), 40);
             }
