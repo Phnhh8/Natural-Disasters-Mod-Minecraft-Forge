@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[52,)"
+loaderVersion="[54,)"
 license="MIT"
 
 [[mods]]
@@ -7,18 +7,18 @@ modId="naturaldisasters"
 version="1.0.0"
 displayName="Natural Disaster Survival"
 authors="Phnhh8"
-description='''12 Natural Disasters and Creative Tab for Minecraft 26.3 Forge'''
+description='''12 Natural Disasters and Creative Tab for Minecraft 1.21.4 Forge'''
 
 [[dependencies.naturaldisasters]]
     modId="forge"
     mandatory=true
-    versionRange="[26.3,)"
+    versionRange="[54,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.naturaldisasters]]
     modId="minecraft"
     mandatory=true
-    versionRange="[26.3,26.4)"
+    versionRange="[1.21.4,1.21.5)"
     ordering="NONE"
     side="BOTH"
