@@ -2,18 +2,30 @@ buildscript {
     repositories {
         maven {
             name = 'MinecraftForge'
-            url = 'https://maven.minecraftforge.net/'
+            url = 'https://minecraftforge.net'
         }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.29', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '7.0.+', changing: true
     }
 }
 
 plugins {
     id 'java-library'
 }
+
+repositories {
+    maven {
+        name = 'MinecraftForge'
+        url = 'https://minecraftforge.net'
+    }
+    mavenCentral()
+}
+
+def forgeConf = configurations.detachedConfiguration(dependencies.create("net.minecraftforge:forge:[26.3,26.4)"))
+forgeConf.transitive = false
+def resolvedForgeVersion = forgeConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
 
 apply plugin: 'net.minecraftforge.gradle'
 
@@ -24,19 +36,7 @@ base {
     archivesName = mod_id
 }
 
-repositories {
-    maven {
-        name = 'MinecraftForge'
-        url = 'https://maven.minecraftforge.net/'
-    }
-    mavenCentral()
-}
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-
-def forgeConf = configurations.detachedConfiguration(dependencies.create("net.minecraftforge:forge:[26.3,26.4)"))
-forgeConf.transitive = false
-def resolvedForgeVersion = forgeConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
 
 minecraft {
     mappings channel: 'official', version: '26.3'
