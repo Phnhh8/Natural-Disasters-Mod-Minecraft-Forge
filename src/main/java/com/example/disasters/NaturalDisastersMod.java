@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -65,7 +65,7 @@ public class NaturalDisastersMod {
     public static final RegistryObject<Item> DISASTER_STOPPER = reg("disaster_stopper", "STOP");
 
     private static RegistryObject<Item> reg(String name, String type) {
-        return ITEMS.register(name, () -> new DisasterItem(new Item.Properties().setId(ITEMS.key(name)).stacksTo(1), type));
+        return ITEMS.register(name, () -> new DisasterItem(new Item.Properties().stacksTo(1), type));
     }
 
     public static final RegistryObject<CreativeModeTab> DISASTER_TAB = TABS.register("disaster_tab", () -> CreativeModeTab.builder()
@@ -80,8 +80,8 @@ public class NaturalDisastersMod {
         }).build()
     );
 
-    public NaturalDisastersMod(FMLJavaModLoadingContext context) {
-        IEventBus modEventBus = context.getModEventBus();
+    public NaturalDisastersMod() {
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modEventBus);
         TABS.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
@@ -90,15 +90,15 @@ public class NaturalDisastersMod {
         private final String type;
         public DisasterItem(Properties props, String type) { super(props); this.type = type; }
         @Override
-        public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
             if (!level.isClientSide() && level instanceof ServerLevel sl) {
                 if (type.equals("STOP")) {
                     activeDisaster = "NONE"; disasterDuration = 0; tornadoPos = null; targetPos = null;
-                    player.displayClientMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"), false);
+                    player.sendSystemMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"));
                 } else startDisaster(sl, type, player.blockPosition());
-                player.getCooldowns().addCooldown(this.getDefaultInstance(), 40);
+                player.getCooldowns().addCooldown(this, 40);
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
         }
     }
 
@@ -186,7 +186,7 @@ public class NaturalDisastersMod {
             level.sendParticles(ParticleTypes.LAVA, top.getX(), top.getY() + 2, top.getZ(), 30, 3.0, 2.0, 3.0, 0.2);
             if (disasterDuration % 4 == 0) {
                 for (int i = 0; i < 4; i++) {
-                    LargeFireball fb = new LargeFireball(level, level.players().get(0), new Vec3((RANDOM.nextDouble() - 0.5) * 3.2, 1.1, (RANDOM.nextDouble() - 0.5) * 3.2), 4);
+                    LargeFireball fb = new LargeFireball(level, level.players().get(0), (RANDOM.nextDouble() - 0.5) * 3.2, 1.1, (RANDOM.nextDouble() - 0.5) * 3.2, 4);
                     fb.setPos(top.getX() + RANDOM.nextInt(5) - 2, top.getY() + 3, top.getZ() + RANDOM.nextInt(5) - 2);
                     level.addFreshEntity(fb);
                 }
@@ -237,7 +237,7 @@ public class NaturalDisastersMod {
             if (disasterDuration % 20 == 0) {
                 for (ServerPlayer p : level.players()) {
                     p.sendSystemMessage(Component.literal("§4§l[HẠT NHÂN] §eNổ sau: §c" + ((disasterDuration - 100) / 20) + "s"));
-                    level.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.MASTER, 1f, 0.5f);
+                    level.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.get(), SoundSource.MASTER, 1f, 0.5f);
                 }
             }
             level.sendParticles(ParticleTypes.FLAME, targetPos.getX(), targetPos.getY() + 2, targetPos.getZ(), 15, 0.5, 10, 0.5, 0.05);
@@ -256,7 +256,7 @@ public class NaturalDisastersMod {
         switch (activeDisaster) {
             case "METEOR" -> {
                 if (disasterDuration % 20 == 0) {
-                    LargeFireball fb = new LargeFireball(level, p, new Vec3(0, -1.5, 0), 3);
+                    LargeFireball fb = new LargeFireball(level, p, 0, -1.5, 0, 3);
                     fb.setPos(pos.getX() + RANDOM.nextInt(30) - 15, pos.getY() + 35, pos.getZ() + RANDOM.nextInt(30) - 15);
                     level.addFreshEntity(fb);
                 }
@@ -312,3 +312,4 @@ public class NaturalDisastersMod {
         }
     }
 }
+
