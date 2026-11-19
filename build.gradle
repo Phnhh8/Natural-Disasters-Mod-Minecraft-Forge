@@ -1,0 +1,40 @@
+buildscript {
+    repositories {
+        maven { url = 'https://minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+    }
+}
+
+plugins {
+    id 'java-library'
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+def forgeConf = configurations.detachedConfiguration(dependencies.create("net.minecraftforge:forge:[26.3,26.4)"))
+forgeConf.transitive = false
+def resolvedForgeVersion = forgeConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
+
+minecraft {
+    mappings channel: 'official', version: '26.3'
+    runs {
+        client {}
+        server { args '--nogui' }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${resolvedForgeVersion}"
+}
