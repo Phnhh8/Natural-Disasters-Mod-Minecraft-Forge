@@ -1,7 +1,9 @@
 package com.example.disasters;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,7 +13,10 @@ import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.*;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -28,7 +33,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +52,7 @@ public class NaturalDisastersMod {
         }
     };
 
-    public static final List<Item> ITEMS = new ArrayList<>();
+    public static final List ITEMS = new ArrayList();
 
     public static final Item TORNADO_ITEM = new DisasterItem("tornado_spawner", "tornado");
     public static final Item METEOR_ITEM = new DisasterItem("meteor_spawner", "meteor");
@@ -70,138 +74,18 @@ public class NaturalDisastersMod {
     }
 
     @SubscribeEvent
+    @SuppressWarnings("unchecked")
     public void registerItems(RegistryEvent.Register<Item> event) {
-        event.getRegistry().registerAll(ITEMS.toArray(new Item[0]));
+        Item[] itemArray = (Item[]) ITEMS.toArray(new Item[0]);
+        event.getRegistry().registerAll(itemArray);
     }
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void registerModels(ModelRegistryEvent event) {
-        for (Item item : ITEMS) {
+        for (Object obj : ITEMS) {
+            Item item = (Item) obj;
             ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
         }
     }
 
-    public static class DisasterItem extends Item {
-        private final String disasterType;
-
-        public DisasterItem(String name, String type) {
-            this.disasterType = type;
-            this.setTranslationKey(MODID + "." + name);
-            this.setRegistryName(MODID, name);
-            this.setCreativeTab(DISASTER_TAB);
-            this.setMaxStackSize(1);
-            ITEMS.add(this);
-        }
-
-        @Override
-        public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
-            ItemStack stack = player.getHeldItem(hand);
-            if (!world.isRemote) {
-                BlockPos pos = player.getPosition();
-                triggerDisaster(world, player, pos, disasterType);
-            }
-            return new ActionResult<>(EnumResult.SUCCESS, stack);
-        }
-    }
-
-    private static void triggerDisaster(World world, EntityPlayer player, BlockPos pos, String type) {
-        switch (type) {
-            case "tornado":
-                tornadoPos = new Vec3d(pos.getX() + 10, pos.getY(), pos.getZ() + 10);
-                tornadoTicks = 400; // 20 giây
-                player.sendMessage(new TextComponentString("§c[Thảm họa] Lốc xoáy đã xuất hiện!"));
-                break;
-
-            case "meteor":
-                for (int i = 0; i < 8; i++) {
-                    double offsetX = (RAND.nextDouble() - 0.5) * 30;
-                    double offsetZ = (RAND.nextDouble() - 0.5) * 30;
-                    EntityLargeFireball meteor = new EntityLargeFireball(world, pos.getX() + offsetX, pos.getY() + 60 + i * 5, pos.getZ() + offsetZ, 0, -1.5, 0);
-                    meteor.explosionPower = 6;
-                    world.spawnEntity(meteor);
-                }
-                player.sendMessage(new TextComponentString("§6[Thảm họa] Mưa thiên thạch đang rơi xuống!"));
-                break;
-
-            case "earthquake":
-                for (int x = -15; x <= 15; x++) {
-                    for (int z = -15; z <= 15; z++) {
-                        if (RAND.nextInt(4) == 0) {
-                            for (int y = -5; y <= 3; y++) {
-                                BlockPos target = pos.add(x, y, z);
-                                if (!world.isAirBlock(target) && world.getBlockState(target).getBlock() != Blocks.BEDROCK) {
-                                    world.destroyBlock(target, false);
-                                }
-                            }
-                        }
-                    }
-                }
-                world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, 0.5F);
-                player.sendMessage(new TextComponentString("§e[Thảm họa] Động đất dữ dội!"));
-                break;
-
-            case "volcano":
-                // Núi lửa phun trào mạnh: tạo chóp nham thạch lớn và bắn TNT + cầu lửa
-                int radius = 12;
-                for (int y = 0; y <= radius; y++) {
-                    int layerRadius = radius - y;
-                    for (int x = -layerRadius; x <= layerRadius; x++) {
-                        for (int z = -layerRadius; z <= layerRadius; z++) {
-                            if (x * x + z * z <= layerRadius * layerRadius) {
-                                BlockPos p = pos.add(x + 15, y, z);
-                                if (x * x + z * z <= (layerRadius - 2) * (layerRadius - 2) && y > 2) {
-                                    world.setBlockState(p, Blocks.LAVA.getDefaultState());
-                                } else {
-                                    world.setBlockState(p, Blocks.OBSIDIAN.getDefaultState());
-                                }
-                            }
-                        }
-                    }
-                }
-                for (int i = 0; i < 12; i++) {
-                    EntityTNTPrimed tnt = new EntityTNTPrimed(world, pos.getX() + 15, pos.getY() + radius + 3, pos.getZ(), player);
-                    tnt.motionX = (RAND.nextDouble() - 0.5) * 1.5;
-                    tnt.motionY = 1.0 + RAND.nextDouble();
-                    tnt.motionZ = (RAND.nextDouble() - 0.5) * 1.5;
-                    tnt.setFuse(60);
-                    world.spawnEntity(tnt);
-                }
-                player.sendMessage(new TextComponentString("§4[Thảm họa] Núi lửa phun trào dữ dội!"));
-                break;
-
-            case "lightning":
-                for (int i = 0; i < 15; i++) {
-                    double lx = pos.getX() + (RAND.nextDouble() - 0.5) * 40;
-                    double lz = pos.getZ() + (RAND.nextDouble() - 0.5) * 40;
-                    BlockPos top = world.getTopSolidOrLiquidBlock(new BlockPos(lx, 0, lz));
-                    world.addWeatherEffect(new EntityLightningBolt(world, top.getX(), top.getY(), top.getZ(), false));
-                }
-                player.sendMessage(new TextComponentString("§b[Thảm họa] Bão sấm sét!"));
-                break;
-        }
-    }
-
-    @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.world.isRemote) return;
-
-        if (tornadoTicks > 0 && tornadoPos != null) {
-            tornadoTicks--;
-            World world = event.world;
-
-            Vec3d dir = new Vec3d(RAND.nextDouble() - 0.5, 0, RAND.nextDouble() - 0.5).normalize();
-            tornadoPos = tornadoPos.add(dir.x * 0.25, 0, dir.z * 0.25);
-
-            BlockPos center = new BlockPos(tornadoPos);
-            for (int y = 0; y  entities = world.getEntitiesWithinAABBExcludingEntity(null,
-                    new AxisAlignedBB(center.add(-8, -2, -8), center.add(8, 20, 8)));
-            for (net.minecraft.entity.Entity entity : entities) {
-                entity.motionY = 0.6;
-                entity.motionX += (RAND.nextDouble() - 0.5) * 0.8;
-                entity.motionZ += (RAND.nextDouble() - 0.5) * 0.8;
-                entity.velocityChanged = true;
-            }
-        }
-    }
-}
