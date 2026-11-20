@@ -17,6 +17,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
@@ -47,8 +48,9 @@ public class NaturalDisastersMod {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) { MinecraftForge.EVENT_BUS.register(this); }
 
-    @SubscribeEvent @SuppressWarnings("unchecked")
-        public void registerItems(RegistryEvent.Register<Item> e) { for (Object o : ITEMS) e.getRegistry().register((Item) o); }
+    @SubscribeEvent
+    public void registerItems(RegistryEvent.Register<Item> e) { for (Object o : ITEMS) e.getRegistry().register((Item) o); }
+
     @SideOnly(Side.CLIENT) @SubscribeEvent
     public void registerModels(ModelRegistryEvent e) {
         for (Object o : ITEMS) { Item i = (Item) o; ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation(i.getRegistryName(), "inventory")); }
@@ -71,8 +73,8 @@ public class NaturalDisastersMod {
     private static void triggerDisaster(World w, EntityPlayer p, BlockPos pos, String type) {
         switch (type) {
             case "tornado":
-                tornadoPos = new Vec3d(pos.getX() + 10, pos.getY(), pos.getZ() + 10); tornadoTicks = 400;
-                p.sendMessage(new TextComponentString("§c[Thảm họa] Lốc xoáy!")); break;
+                tornadoPos = new Vec3d(pos.getX() + 8, pos.getY(), pos.getZ() + 8); tornadoTicks = 500;
+                p.sendMessage(new TextComponentString("§c[Thảm họa] Lốc xoáy khổng lồ đã xuất hiện!")); break;
             case "meteor":
                 for (int i = 0; i != 8; i++) {
                     EntityLargeFireball m = new EntityLargeFireball(w, pos.getX() + (RAND.nextDouble() - 0.5) * 30, pos.getY() + 60 + i * 5, pos.getZ() + (RAND.nextDouble() - 0.5) * 30, 0, -1.5, 0);
@@ -116,17 +118,31 @@ public class NaturalDisastersMod {
         if (e.phase != TickEvent.Phase.END || e.world.isRemote || tornadoTicks == 0 || tornadoPos == null) return;
         tornadoTicks--; World w = e.world;
         Vec3d d = new Vec3d(RAND.nextDouble() - 0.5, 0, RAND.nextDouble() - 0.5).normalize();
-        tornadoPos = tornadoPos.add(d.x * 0.25, 0, d.z * 0.25);
+        tornadoPos = tornadoPos.add(d.x * 0.35, 0, d.z * 0.35);
         BlockPos c = new BlockPos(tornadoPos);
-        for (int y = 0; y != 18; y++) {
+
+        if (w instanceof WorldServer) {
+            WorldServer ws = (WorldServer) w;
+            for (int y = 0; y != 22; y += 2) {
+                double radius = 1.5 + (y * 0.35);
+                double angle = (tornadoTicks * 0.6) + (y * 0.5);
+                double px = tornadoPos.x + Math.cos(angle) * radius;
+                double pz = tornadoPos.z + Math.sin(angle) * radius;
+                ws.spawnParticle(EnumParticleTypes.CLOUD, px, tornadoPos.y + y, pz, 4, 0.4, 0.2, 0.4, 0.02);
+                ws.spawnParticle(EnumParticleTypes.SMOKE_LARGE, px, tornadoPos.y + y, pz, 2, 0.3, 0.2, 0.3, 0.01);
+            }
+        }
+        if (tornadoTicks % 15 == 0) w.playSound(null, c, SoundEvents.ENTITY_ENDERDRAGON_FLAP, SoundCategory.WEATHER, 3.0F, 0.5F);
+
+        for (int y = 0; y != 20; y++) {
             int r = 2 + (y / 4);
-            for (int x = -r; x != r + 1; x++) for (int z = -r; z != r + 1; z++) if (RAND.nextInt(15) == 0) {
+            for (int x = -r; x != r + 1; x++) for (int z = -r; z != r + 1; z++) if (RAND.nextInt(10) == 0) {
                 BlockPos bp = c.add(x, y, z); Block b = w.getBlockState(bp).getBlock();
                 if (b != Blocks.AIR && b != Blocks.BEDROCK) w.setBlockToAir(bp);
             }
         }
-        for (Object o : w.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(c.add(-8, -2, -8), c.add(8, 20, 8)))) {
-            Entity en = (Entity) o; en.motionY = 0.6; en.motionX += (RAND.nextDouble() - 0.5) * 0.8; en.motionZ += (RAND.nextDouble() - 0.5) * 0.8; en.velocityChanged = true;
+        for (Object o : w.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(c.add(-10, -2, -10), c.add(10, 24, 10)))) {
+            Entity en = (Entity) o; en.motionY = 0.75; en.motionX += (RAND.nextDouble() - 0.5) * 1.1; en.motionZ += (RAND.nextDouble() - 0.5) * 1.1; en.velocityChanged = true;
         }
     }
 }
