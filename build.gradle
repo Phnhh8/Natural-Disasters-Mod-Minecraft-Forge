@@ -16,16 +16,13 @@ minecraft {
 }
 
 repositories {
+    minecraft.mavenizer
     mavenCentral()
     maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
 }
 
 dependencies {
     implementation minecraft.dependency('net.minecraftforge:forge:26.2-65.1.6')
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
 }
 
 tasks.withType(JavaCompile).configureEach {
