@@ -13,7 +13,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
@@ -92,6 +91,7 @@ public class NaturalDisastersMod {
             return InteractionResult.SUCCESS;
         }
     }
+    @SuppressWarnings("unchecked")
     private static void run(ServerLevel l, Player p, BlockPos pos, String type) {
         RandomSource r = l.getRandom();
         switch (type) {
@@ -128,10 +128,11 @@ public class NaturalDisastersMod {
                 }
             }
             case "lightning" -> {
+                var boltType = (EntityType<? extends LightningBolt>) EntityType.byString("minecraft:lightning_bolt").get();
                 for (int i = 0; i != 20; i++) {
                     BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
-                    LightningBolt b = new LightningBolt(EntityType.LIGHTNING, l);
-                    b.moveTo(Vec3.atBottomCenterOf(top));
+                    LightningBolt b = new LightningBolt(boltType, l);
+                    b.setPos(top.getX() + 0.5, top.getY(), top.getZ() + 0.5);
                     l.addFreshEntity(b);
                 }
             }
