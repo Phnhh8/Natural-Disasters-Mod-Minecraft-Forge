@@ -48,8 +48,7 @@ public class NaturalDisastersMod {
     public void preInit(FMLPreInitializationEvent e) { MinecraftForge.EVENT_BUS.register(this); }
 
     @SubscribeEvent @SuppressWarnings("unchecked")
-    public void registerItems(RegistryEvent.Register<Item> e) { e.getRegistry().registerAll((Item[]) ITEMS.toArray(new Item)); }
-
+        public void registerItems(RegistryEvent.Register<Item> e) { for (Object o : ITEMS) e.getRegistry().register((Item) o); }
     @SideOnly(Side.CLIENT) @SubscribeEvent
     public void registerModels(ModelRegistryEvent e) {
         for (Object o : ITEMS) { Item i = (Item) o; ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation(i.getRegistryName(), "inventory")); }
