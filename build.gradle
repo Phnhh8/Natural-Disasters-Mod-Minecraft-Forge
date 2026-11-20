@@ -26,9 +26,9 @@ minecraft {
 }
 
 repositories {
-    minecraft.mavenizer()
+    minecraft.mavenizer(delegate)
+    maven fg.forgeMaven
     mavenCentral()
-    maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
 }
 
 dependencies {
