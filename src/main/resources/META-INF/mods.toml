@@ -1,3 +1,25 @@
+modLoader="javafml"
 loaderVersion="[61,)"
-# ... ở phần [[dependencies.naturaldisasters]] với modId="minecraft":
-versionRange="[1.21.11,1.22)"
+license="MIT"
+
+[[mods]]
+modId="naturaldisasters"
+version="1.0.0"
+displayName="Natural Disasters Mod"
+description='''
+Adds natural disasters to Minecraft 1.21.11.
+'''
+
+[[dependencies.naturaldisasters]]
+    modId="forge"
+    mandatory=true
+    versionRange="[61,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.naturaldisasters]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.21.11,1.22)"
+    ordering="NONE"
+    side="BOTH"
