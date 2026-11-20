@@ -16,7 +16,7 @@ minecraft {
 
     runs {
         configureEach {
-            workingDirectory.convention(layout.projectDirectory.dir('run'))
+            workingDir.convention(layout.projectDirectory.dir('run'))
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             systemProperty 'forge.logging.console.level', 'debug'
         }
@@ -26,7 +26,7 @@ minecraft {
 }
 
 repositories {
-    minecraft.mavenizer
+    minecraft.mavenizer()
     mavenCentral()
     maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
 }
