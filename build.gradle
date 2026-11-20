@@ -86,8 +86,12 @@ tasks.register('generateAssets') {
             nuke_spawner: "tnt", sandstorm_spawner: "gunpowder", wildfire_spawner: "blaze_powder"
         ]
         icons.each { id, tex ->
-            new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
-            new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
+            if (id == "nuke_spawner") {
+                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"minecraft:block/tnt"}}""", 'UTF-8')
+            } else {
+                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
+                new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
+            }
         }
     }
 }
