@@ -1,148 +1,213 @@
 package com.example.disasters;
 
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.EntityLightningBolt;
-import net.minecraft.entity.item.EntityTNTPrimed;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.projectile.EntityLargeFireball;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.*;
-import net.minecraft.util.math.*;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.InteractionHand;
+import net.minecraft.util.InteractionResult;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import java.util.*;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import java.util.ArrayList;
+import java.util.List;
 
-@Mod(modid = "naturaldisasters", name = "Natural Disasters Mod", version = "1.0")
+@Mod("naturaldisasters")
 public class NaturalDisastersMod {
-    public static final CreativeTabs DISASTER_TAB = new CreativeTabs("naturaldisasters") {
-        @Override public ItemStack createIcon() { return new ItemStack(Items.FIRE_CHARGE); }
-    };
-    public static final List ITEMS = new ArrayList();
-    public static final Item TORNADO = new DisasterItem("tornado_spawner", "tornado");
-    public static final Item METEOR = new DisasterItem("meteor_spawner", "meteor");
-    public static final Item QUAKE = new DisasterItem("earthquake_spawner", "earthquake");
-    public static final Item VOLCANO = new DisasterItem("volcano_spawner", "volcano");
-    public static final Item STORM = new DisasterItem("lightning_spawner", "lightning");
-    private static Vec3d tornadoPos = null;
-    private static int tornadoTicks = 0;
-    private static final Random RAND = new Random();
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "naturaldisasters");
+    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, "naturaldisasters");
+    private static final List<RegistryObject<Item>> ALL = new ArrayList<>();
 
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent e) { MinecraftForge.EVENT_BUS.register(this); }
+    private static RegistryObject<Item> reg(String id, String t) {
+        RegistryObject<Item> o = ITEMS.register(id, () -> new DisasterItem(new Item.Properties().setId(ITEMS.key(id)).stacksTo(1), t));
+        ALL.add(o);
+        return o;
+    }
 
-    @SubscribeEvent
-    public void registerItems(RegistryEvent.Register<Item> e) { for (Object o : ITEMS) e.getRegistry().register((Item) o); }
+    public static final RegistryObject<Item> I1 = reg("tornado_spawner", "tornado");
+    public static final RegistryObject<Item> I2 = reg("meteor_spawner", "meteor");
+    public static final RegistryObject<Item> I3 = reg("earthquake_spawner", "earthquake");
+    public static final RegistryObject<Item> I4 = reg("volcano_spawner", "volcano");
+    public static final RegistryObject<Item> I5 = reg("lightning_spawner", "lightning");
+    public static final RegistryObject<Item> I6 = reg("tsunami_spawner", "tsunami");
+    public static final RegistryObject<Item> I7 = reg("blizzard_spawner", "blizzard");
+    public static final RegistryObject<Item> I8 = reg("blackhole_spawner", "blackhole");
+    public static final RegistryObject<Item> I9 = reg("acidrain_spawner", "acidrain");
+    public static final RegistryObject<Item> I10 = reg("nuke_spawner", "nuke");
+    public static final RegistryObject<Item> I11 = reg("sandstorm_spawner", "sandstorm");
+    public static final RegistryObject<Item> I12 = reg("wildfire_spawner", "wildfire");
 
-    @SideOnly(Side.CLIENT) @SubscribeEvent
-    public void registerModels(ModelRegistryEvent e) {
-        for (Object o : ITEMS) { Item i = (Item) o; ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation(i.getRegistryName(), "inventory")); }
+    public static final RegistryObject<CreativeModeTab> TAB = TABS.register("naturaldisasters", () -> CreativeModeTab.builder()
+            .title(Component.translatable("itemGroup.naturaldisasters"))
+            .icon(() -> new ItemStack(Items.FIRE_CHARGE))
+            .displayItems((p, out) -> ALL.forEach(i -> out.accept(i.get())))
+            .build());
+
+    private static Vec3 tPos = null, bPos = null;
+    private static int tTick = 0, bTick = 0;
+
+    public NaturalDisastersMod(FMLJavaModLoadingContext ctx) {
+        var bus = ctx.getModBusGroup();
+        ITEMS.register(bus);
+        TABS.register(bus);
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     public static class DisasterItem extends Item {
         private final String type;
-        @SuppressWarnings("unchecked")
-        public DisasterItem(String name, String type) {
-            this.type = type; setTranslationKey("naturaldisasters." + name); setRegistryName("naturaldisasters", name);
-            setCreativeTab(DISASTER_TAB); setMaxStackSize(1); ITEMS.add(this);
-        }
+        public DisasterItem(Properties p, String t) { super(p); this.type = t; }
+
         @Override
-        public ActionResult<ItemStack> onItemRightClick(World w, EntityPlayer p, EnumHand h) {
-            if (!w.isRemote) triggerDisaster(w, p, p.getPosition(), type);
-            return new ActionResult<>(EnumActionResult.SUCCESS, p.getHeldItem(h));
+        public InteractionResult use(Level l, Player p, InteractionHand h) {
+            if (!l.isClientSide() && l instanceof ServerLevel sl) run(sl, p, p.blockPosition(), type);
+            return InteractionResult.SUCCESS;
         }
     }
-
-    private static void triggerDisaster(World w, EntityPlayer p, BlockPos pos, String type) {
+    private static void run(ServerLevel l, Player p, BlockPos pos, String type) {
+        RandomSource r = l.getRandom();
         switch (type) {
-            case "tornado":
-                tornadoPos = new Vec3d(pos.getX() + 8, pos.getY(), pos.getZ() + 8); tornadoTicks = 500;
-                p.sendMessage(new TextComponentString("§c[Thảm họa] Lốc xoáy khổng lồ đã xuất hiện!")); break;
-            case "meteor":
-                for (int i = 0; i != 8; i++) {
-                    EntityLargeFireball m = new EntityLargeFireball(w, pos.getX() + (RAND.nextDouble() - 0.5) * 30, pos.getY() + 60 + i * 5, pos.getZ() + (RAND.nextDouble() - 0.5) * 30, 0, -1.5, 0);
-                    m.explosionPower = 6; w.spawnEntity(m);
+            case "tornado" -> { tPos = new Vec3(pos.getX() + 8, pos.getY(), pos.getZ() + 8); tTick = 500; }
+            case "meteor" -> {
+                for (int i = 0; i != 10; i++) {
+                    var m = new LargeFireball(l, p, new Vec3(0, -1.5, 0), 7);
+                    m.setPos(pos.getX() + (r.nextDouble() - 0.5) * 35, pos.getY() + 60 + i * 5, pos.getZ() + (r.nextDouble() - 0.5) * 35);
+                    l.addFreshEntity(m);
                 }
-                p.sendMessage(new TextComponentString("§6[Thảm họa] Mưa thiên thạch!")); break;
-            case "earthquake":
-                for (int x = -15; x != 16; x++) for (int z = -15; z != 16; z++) if (RAND.nextInt(4) == 0)
-                    for (int y = -5; y != 4; y++) {
-                        BlockPos t = pos.add(x, y, z);
-                        if (!w.isAirBlock(t) && w.getBlockState(t).getBlock() != Blocks.BEDROCK) w.destroyBlock(t, false);
+            }
+            case "earthquake" -> {
+                for (int x = -18; x != 19; x++) for (int z = -18; z != 19; z++) if (r.nextInt(3) == 0)
+                    for (int y = -6; y != 4; y++) {
+                        BlockPos t = pos.offset(x, y, z);
+                        if (!l.isEmptyBlock(t) && !l.getBlockState(t).is(Blocks.BEDROCK)) l.destroyBlock(t, false);
                     }
-                w.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, 0.5F);
-                p.sendMessage(new TextComponentString("§e[Thảm họa] Động đất!")); break;
-            case "volcano":
-                int r = 12;
-                for (int y = 0; y != r + 1; y++) {
-                    int lr = r - y;
+                l.playSound(null, pos, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 4.0F, 0.5F);
+            }
+            case "volcano" -> {
+                int rad = 14;
+                for (int y = 0; y != rad + 1; y++) {
+                    int lr = rad - y;
                     for (int x = -lr; x != lr + 1; x++) for (int z = -lr; z != lr + 1; z++) {
                         int d = x * x + z * z, m = lr * lr, in = (lr - 2) * (lr - 2);
-                        if (d == m || m - d > 0) w.setBlockState(pos.add(x + 15, y, z), (lr > 2 && y > 2 && in - d > 0 ? Blocks.LAVA : Blocks.OBSIDIAN).getDefaultState());
+                        if (d == m || m - d > 0) l.setBlockAndUpdate(pos.offset(x + 16, y, z), (lr > 2 && y > 2 && in - d > 0 ? Blocks.LAVA : Blocks.OBSIDIAN).defaultBlockState());
                     }
                 }
-                for (int i = 0; i != 12; i++) {
-                    EntityTNTPrimed tnt = new EntityTNTPrimed(w, pos.getX() + 15, pos.getY() + r + 3, pos.getZ(), p);
-                    tnt.motionX = (RAND.nextDouble() - 0.5) * 1.5; tnt.motionY = 1.0 + RAND.nextDouble(); tnt.motionZ = (RAND.nextDouble() - 0.5) * 1.5;
-                    tnt.setFuse(60); w.spawnEntity(tnt);
-                }
-                p.sendMessage(new TextComponentString("§4[Thảm họa] Núi lửa phun trào!")); break;
-            case "lightning":
                 for (int i = 0; i != 15; i++) {
-                    BlockPos top = w.getTopSolidOrLiquidBlock(new BlockPos(pos.getX() + (RAND.nextDouble() - 0.5) * 40, 0, pos.getZ() + (RAND.nextDouble() - 0.5) * 40));
-                    w.addWeatherEffect(new EntityLightningBolt(w, top.getX(), top.getY(), top.getZ(), false));
+                    var t = new PrimedTnt(l, pos.getX() + 16, pos.getY() + rad + 3, pos.getZ(), p);
+                    t.setDeltaMovement((r.nextDouble() - 0.5) * 1.8, 1.1 + r.nextDouble(), (r.nextDouble() - 0.5) * 1.8);
+                    t.setFuse(60);
+                    l.addFreshEntity(t);
                 }
-                p.sendMessage(new TextComponentString("§b[Thảm họa] Bão sét!")); break;
+            }
+            case "lightning" -> {
+                for (int i = 0; i != 20; i++) {
+                    BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
+                    var b = EntityType.LIGHTNING_BOLT.create(l, EntitySpawnReason.TRIGGERED);
+                    if (b != null) { b.moveTo(Vec3.atBottomCenterOf(top)); l.addFreshEntity(b); }
+                }
+            }
+            case "tsunami" -> {
+                for (int x = -20; x != 21; x++) for (int z = -20; z != 21; z++) for (int y = 0; y != 10; y++) {
+                    BlockPos t = pos.offset(x, y, z);
+                    if (l.isEmptyBlock(t)) l.setBlockAndUpdate(t, Blocks.WATER.defaultBlockState());
+                }
+            }
+            case "blizzard" -> {
+                for (int x = -20; x != 21; x++) for (int z = -20; z != 21; z++) {
+                    BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos.offset(x, 0, z));
+                    if (l.isEmptyBlock(top)) l.setBlockAndUpdate(top, Blocks.SNOW.defaultBlockState());
+                    if (l.getBlockState(top.below()).is(Blocks.WATER)) l.setBlockAndUpdate(top.below(), Blocks.ICE.defaultBlockState());
+                }
+                l.getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(20)).forEach(e -> e.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 300, 3)));
+            }
+            case "blackhole" -> { bPos = new Vec3(pos.getX() + 10, pos.getY() + 8, pos.getZ() + 10); bTick = 300; }
+            case "acidrain" -> {
+                for (int x = -18; x != 19; x++) for (int z = -18; z != 19; z++) if (r.nextInt(3) == 0) {
+                    BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos.offset(x, 0, z)).below();
+                    if (!l.getBlockState(top).is(Blocks.BEDROCK)) l.removeBlock(top, false);
+                }
+                l.getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(20)).forEach(e -> e.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 2)));
+            }
+            case "nuke" -> l.explode(p, pos.getX() + 12, pos.getY(), pos.getZ() + 12, 22.0F, true, Level.ExplosionInteraction.TNT);
+            case "sandstorm" -> {
+                for (int i = 0; i != 80; i++) FallingBlockEntity.fall(l, pos.offset((int) ((r.nextDouble() - 0.5) * 30), 15 + r.nextInt(10), (int) ((r.nextDouble() - 0.5) * 30)), Blocks.SAND.defaultBlockState());
+                l.getEntitiesOfClass(LivingEntity.class, new AABB(pos).inflate(20)).forEach(e -> e.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 200, 1)));
+            }
+            case "wildfire" -> {
+                for (int x = -18; x != 19; x++) for (int z = -18; z != 19; z++) if (r.nextInt(3) == 0) {
+                    BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos.offset(x, 0, z));
+                    if (l.isEmptyBlock(top)) l.setBlockAndUpdate(top, Blocks.FIRE.defaultBlockState());
+                }
+            }
         }
     }
 
     @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent e) {
-        if (e.phase != TickEvent.Phase.END || e.world.isRemote || tornadoTicks == 0 || tornadoPos == null) return;
-        tornadoTicks--; World w = e.world;
-        Vec3d d = new Vec3d(RAND.nextDouble() - 0.5, 0, RAND.nextDouble() - 0.5).normalize();
-        tornadoPos = tornadoPos.add(d.x * 0.35, 0, d.z * 0.35);
-        BlockPos c = new BlockPos(tornadoPos);
-
-        if (w instanceof WorldServer) {
-            WorldServer ws = (WorldServer) w;
+    public void onTick(TickEvent.LevelTickEvent.Post e) {
+        if (!(e.level() instanceof ServerLevel l)) return;
+        RandomSource r = l.getRandom();
+        if (tTick > 0 && tPos != null) {
+            tTick--;
+            Vec3 d = new Vec3(r.nextDouble() - 0.5, 0, r.nextDouble() - 0.5).normalize();
+            tPos = tPos.add(d.x * 0.35, 0, d.z * 0.35);
+            BlockPos c = BlockPos.containing(tPos);
             for (int y = 0; y != 22; y += 2) {
-                double radius = 1.5 + (y * 0.35);
-                double angle = (tornadoTicks * 0.6) + (y * 0.5);
-                double px = tornadoPos.x + Math.cos(angle) * radius;
-                double pz = tornadoPos.z + Math.sin(angle) * radius;
-                ws.spawnParticle(EnumParticleTypes.CLOUD, px, tornadoPos.y + y, pz, 4, 0.4, 0.2, 0.4, 0.02);
-                ws.spawnParticle(EnumParticleTypes.SMOKE_LARGE, px, tornadoPos.y + y, pz, 2, 0.3, 0.2, 0.3, 0.01);
+                double rad = 1.5 + y * 0.35, ang = tTick * 0.6 + y * 0.5;
+                l.sendParticles(ParticleTypes.CLOUD, tPos.x + Math.cos(ang) * rad, tPos.y + y, tPos.z + Math.sin(ang) * rad, 4, 0.4, 0.2, 0.4, 0.02);
+            }
+            if (tTick % 15 == 0) l.playSound(null, c, SoundEvents.ENDER_DRAGON_FLAP, SoundSource.WEATHER, 3.0F, 0.5F);
+            for (int y = 0; y != 20; y++) {
+                int rad = 2 + y / 4;
+                for (int x = -rad; x != rad + 1; x++) for (int z = -rad; z != rad + 1; z++) if (r.nextInt(10) == 0) {
+                    BlockPos bp = c.offset(x, y, z);
+                    if (!l.isEmptyBlock(bp) && !l.getBlockState(bp).is(Blocks.BEDROCK)) l.removeBlock(bp, false);
+                }
+            }
+            for (Entity en : l.getEntities(null, new AABB(c.offset(-10, -2, -10), c.offset(10, 24, 10)))) {
+                en.setDeltaMovement(en.getDeltaMovement().x + (r.nextDouble() - 0.5) * 1.1, 0.75, en.getDeltaMovement().z + (r.nextDouble() - 0.5) * 1.1);
+                en.hurtMarked = true;
             }
         }
-        if (tornadoTicks % 15 == 0) w.playSound(null, c, SoundEvents.ENTITY_ENDERDRAGON_FLAP, SoundCategory.WEATHER, 3.0F, 0.5F);
-
-        for (int y = 0; y != 20; y++) {
-            int r = 2 + (y / 4);
-            for (int x = -r; x != r + 1; x++) for (int z = -r; z != r + 1; z++) if (RAND.nextInt(10) == 0) {
-                BlockPos bp = c.add(x, y, z); Block b = w.getBlockState(bp).getBlock();
-                if (b != Blocks.AIR && b != Blocks.BEDROCK) w.setBlockToAir(bp);
+        if (bTick > 0 && bPos != null) {
+            bTick--;
+            BlockPos c = BlockPos.containing(bPos);
+            l.sendParticles(ParticleTypes.PORTAL, bPos.x, bPos.y, bPos.z, 40, 2.5, 2.5, 2.5, 0.5);
+            for (int i = 0; i != 12; i++) {
+                BlockPos bp = c.offset(r.nextInt(17) - 8, r.nextInt(17) - 8, r.nextInt(17) - 8);
+                if (!l.isEmptyBlock(bp) && !l.getBlockState(bp).is(Blocks.BEDROCK)) l.removeBlock(bp, false);
             }
-        }
-        for (Object o : w.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(c.add(-10, -2, -10), c.add(10, 24, 10)))) {
-            Entity en = (Entity) o; en.motionY = 0.75; en.motionX += (RAND.nextDouble() - 0.5) * 1.1; en.motionZ += (RAND.nextDouble() - 0.5) * 1.1; en.velocityChanged = true;
+            for (Entity en : l.getEntities(null, new AABB(c).inflate(18))) {
+                en.setDeltaMovement(bPos.subtract(en.position()).normalize().scale(0.5));
+                en.hurtMarked = true;
+            }
         }
     }
 }
