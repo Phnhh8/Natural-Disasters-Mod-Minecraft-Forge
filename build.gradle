@@ -39,3 +39,58 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+tasks.register('generateAssets') {
+    doLast {
+        def baseDir = file("$buildDir/generated/resources/assets/naturaldisasters")
+        new File(baseDir, "lang").mkdirs()
+        new File(baseDir, "items").mkdirs()
+        new File(baseDir, "models/item").mkdirs()
+
+        new File(baseDir, "lang/en_us.json").setText('''{
+  "itemGroup.naturaldisasters": "Natural Disasters",
+  "item.naturaldisasters.tornado_spawner": "Tornado Spawner",
+  "item.naturaldisasters.meteor_spawner": "Meteor Shower Spawner",
+  "item.naturaldisasters.earthquake_spawner": "Earthquake Spawner",
+  "item.naturaldisasters.volcano_spawner": "Volcano Spawner",
+  "item.naturaldisasters.lightning_spawner": "Lightning Storm Spawner",
+  "item.naturaldisasters.tsunami_spawner": "Tsunami Spawner",
+  "item.naturaldisasters.blizzard_spawner": "Blizzard Spawner",
+  "item.naturaldisasters.blackhole_spawner": "Black Hole Spawner",
+  "item.naturaldisasters.acidrain_spawner": "Acid Rain Spawner",
+  "item.naturaldisasters.nuke_spawner": "Nuclear Bomb Spawner",
+  "item.naturaldisasters.sandstorm_spawner": "Sandstorm Spawner",
+  "item.naturaldisasters.wildfire_spawner": "Wildfire Spawner"
+}''', 'UTF-8')
+
+        new File(baseDir, "lang/vi_vn.json").setText('''{
+  "itemGroup.naturaldisasters": "Thảm Họa Thiên Nhiên",
+  "item.naturaldisasters.tornado_spawner": "Triệu Hồi Lốc Xoáy",
+  "item.naturaldisasters.meteor_spawner": "Triệu Hồi Mưa Thiên Thạch",
+  "item.naturaldisasters.earthquake_spawner": "Triệu Hồi Động Đất",
+  "item.naturaldisasters.volcano_spawner": "Triệu Hồi Núi Lửa",
+  "item.naturaldisasters.lightning_spawner": "Triệu Hồi Bão Sấm Sét",
+  "item.naturaldisasters.tsunami_spawner": "Triệu Hồi Sóng Thần",
+  "item.naturaldisasters.blizzard_spawner": "Triệu Hồi Bão Tuyết",
+  "item.naturaldisasters.blackhole_spawner": "Triệu Hồi Hố Đen",
+  "item.naturaldisasters.acidrain_spawner": "Triệu Hồi Mưa Axit",
+  "item.naturaldisasters.nuke_spawner": "Triệu Hồi Bom Hạt Nhân",
+  "item.naturaldisasters.sandstorm_spawner": "Triệu Hồi Bão Cát",
+  "item.naturaldisasters.wildfire_spawner": "Triệu Hồi Cháy Rừng"
+}''', 'UTF-8')
+
+        def icons = [
+            tornado_spawner: "feather", meteor_spawner: "fire_charge", earthquake_spawner: "flint",
+            volcano_spawner: "magma_cream", lightning_spawner: "blaze_rod", tsunami_spawner: "water_bucket",
+            blizzard_spawner: "snowball", blackhole_spawner: "ender_pearl", acidrain_spawner: "slime_ball",
+            nuke_spawner: "tnt", sandstorm_spawner: "gunpowder", wildfire_spawner: "blaze_powder"
+        ]
+        icons.each { id, tex ->
+            new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
+            new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir "$buildDir/generated/resources"
+processResources.dependsOn('generateAssets')
