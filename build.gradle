@@ -1,23 +1,17 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-    }
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8.0)'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-
 version = '1.0'
-group = 'com.example.naturaldisasters'
-archivesBaseName = 'naturaldisasters'
+group = 'com.example.disasters'
+base.archivesName = 'naturaldisasters-26.2'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 minecraft {
-    mappings channel: 'stable', version: '39-1.12'
+    mappings channel: 'official', version: '26.2'
 }
 
 repositories {
@@ -26,21 +20,9 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+    implementation minecraft.dependency('net.minecraftforge:forge:26.2-65.1.6')
 }
 
-jar {
-    manifest {
-        attributes([
-            "Specification-Title": "naturaldisasters",
-            "Specification-Vendor": "example",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor": "example",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
-
-jar.finalizedBy('reobfJar')
