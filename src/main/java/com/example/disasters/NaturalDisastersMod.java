@@ -27,9 +27,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -76,7 +74,7 @@ public class NaturalDisastersMod {
         var bus = ctx.getModBusGroup();
         ITEMS.register(bus);
         TABS.register(bus);
-        MinecraftForge.EVENT_BUS.register(this);
+        TickEvent.LevelTickEvent.Post.BUS.addListener(this::onTick);
     }
 
     public static class DisasterItem extends Item {
@@ -166,7 +164,6 @@ public class NaturalDisastersMod {
         }
     }
 
-    @SubscribeEvent
     public void onTick(TickEvent.LevelTickEvent.Post e) {
         if (!(e.level() instanceof ServerLevel l)) return;
         RandomSource r = l.getRandom();
