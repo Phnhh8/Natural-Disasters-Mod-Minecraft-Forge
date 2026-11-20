@@ -93,4 +93,7 @@ tasks.register('generateAssets') {
 }
 
 sourceSets.main.resources.srcDir "$buildDir/generated/resources"
-processResources.dependsOn('generateAssets')
+processResources {
+    dependsOn('generateAssets')
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
