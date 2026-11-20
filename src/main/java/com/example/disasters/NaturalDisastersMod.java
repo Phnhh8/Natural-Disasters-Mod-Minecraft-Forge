@@ -7,9 +7,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.InteractionHand;
-import net.minecraft.util.InteractionResult;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -20,7 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -130,8 +130,9 @@ public class NaturalDisastersMod {
             case "lightning" -> {
                 for (int i = 0; i != 20; i++) {
                     BlockPos top = l.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
-                    var b = EntityType.LIGHTNING_BOLT.create(l, EntitySpawnReason.TRIGGERED);
-                    if (b != null) { b.moveTo(Vec3.atBottomCenterOf(top)); l.addFreshEntity(b); }
+                    LightningBolt b = new LightningBolt(EntityType.LIGHTNING, l);
+                    b.moveTo(Vec3.atBottomCenterOf(top));
+                    l.addFreshEntity(b);
                 }
             }
             case "tsunami" -> {
@@ -191,7 +192,7 @@ public class NaturalDisastersMod {
                     if (!l.isEmptyBlock(bp) && !l.getBlockState(bp).is(Blocks.BEDROCK)) l.removeBlock(bp, false);
                 }
             }
-            for (Entity en : l.getEntities(null, new AABB(c.offset(-10, -2, -10), c.offset(10, 24, 10)))) {
+            for (Entity en : l.getEntities(null, new AABB(c).inflate(10, 24, 10))) {
                 en.setDeltaMovement(en.getDeltaMovement().x + (r.nextDouble() - 0.5) * 1.1, 0.75, en.getDeltaMovement().z + (r.nextDouble() - 0.5) * 1.1);
                 en.hurtMarked = true;
             }
