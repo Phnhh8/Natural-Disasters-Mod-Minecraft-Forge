@@ -1,50 +1,38 @@
-plugins {
-    id 'java'
-    id 'eclipse'
-    id 'idea'
-    id 'net.minecraftforge.gradle' version '[7.0.17,8.0)'
-}
-
-version = '1.0'
-group = 'com.example.disasters'
-base.archivesName = 'naturaldisasters-26.2'
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-
-minecraft {
-    mappings channel: 'official', version: '26.2'
-
-    runs {
-        configureEach {
-            workingDir.convention(layout.projectDirectory.dir('run'))
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            systemProperty 'forge.logging.console.level', 'debug'
-        }
-        client {}
-        server { args '--nogui' }
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 
+apply plugin: 'net.minecraftforge.gradle'
+
+version = '1.0'
+group = 'com.example.disasters'
+archivesBaseName = 'naturaldisasters-1.16.5'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+minecraft {
+    mappings channel: 'official', version: '1.16.5'
+}
+
 repositories {
-    minecraft.mavenizer(delegate)
-    maven { url = 'https://' + 'libraries.' + 'minecraft.net/' }
-    maven fg.forgeMaven
     mavenCentral()
+    maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
 }
 
 dependencies {
-    implementation minecraft.dependency('net.minecraftforge:forge:26.2-65.1.6')
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.42'
 }
 
 tasks.register('generateAssets') {
     doLast {
         def baseDir = file("$buildDir/generated/resources/assets/naturaldisasters")
         new File(baseDir, "lang").mkdirs()
-        new File(baseDir, "items").mkdirs()
         new File(baseDir, "models/item").mkdirs()
 
         new File(baseDir, "lang/en_us.json").setText('''{
@@ -87,9 +75,8 @@ tasks.register('generateAssets') {
         ]
         icons.each { id, tex ->
             if (id == "nuke_spawner") {
-                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"minecraft:block/tnt"}}""", 'UTF-8')
+                new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:block/tnt"}""", 'UTF-8')
             } else {
-                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
                 new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
             }
         }
@@ -101,3 +88,5 @@ processResources {
     dependsOn('generateAssets')
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
+
+jar.finalizedBy('reobfJar')
