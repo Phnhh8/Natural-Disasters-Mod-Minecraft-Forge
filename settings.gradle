@@ -1,13 +1,1 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        maven {
-            name = 'MinecraftForge'
-            url = 'https://minecraftforge.net'
-        }
-    }
-}
-
-plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.9.0'
-}
+rootProject.name = 'naturaldisasters'
