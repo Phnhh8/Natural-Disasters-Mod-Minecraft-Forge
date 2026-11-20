@@ -1,0 +1,6 @@
+itemGroup.naturaldisasters=Natural Disasters
+item.naturaldisasters.tornado_spawner.name=Tornado Spawner
+item.naturaldisasters.meteor_spawner.name=Meteor Shower Spawner
+item.naturaldisasters.earthquake_spawner.name=Earthquake Spawner
+item.naturaldisasters.volcano_spawner.name=Volcano Eruption Spawner
+item.naturaldisasters.lightning_spawner.name=Lightning Storm Spawner
