@@ -1,1 +1,12 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven {
+            name = "MinecraftForge"
+            url = "https://minecraftforge.net"
+        }
+    }
+}
+
 rootProject.name = 'naturaldisasters'
