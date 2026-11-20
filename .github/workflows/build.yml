@@ -2,7 +2,8 @@ name: Build Minecraft Mod 1.12.2
 
 on:
   push:
-    branches: [ 1.12.2 ]
+    branches:
+      - '1.12.2'
   workflow_dispatch:
 
 jobs:
