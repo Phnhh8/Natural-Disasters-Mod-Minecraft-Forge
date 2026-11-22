@@ -19,7 +19,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -80,7 +80,7 @@ public class NaturalDisastersMod {
         BusGroup modBusGroup = context.getModBusGroup();
         ITEMS.register(modBusGroup);
         TABS.register(modBusGroup);
-        TickEvent.LevelTickEvent.BUS.addListener(NaturalDisastersMod::onTick);
+        TickEvent.LevelTickEvent.Post.BUS.addListener(NaturalDisastersMod::onTick);
     }
 
     public static class DisasterItem extends Item {
@@ -89,7 +89,7 @@ public class NaturalDisastersMod {
 
         @Override
         public InteractionResult use(Level w, Player p, InteractionHand h) {
-            if (!w.isClientSide && w instanceof ServerLevel serverLevel) {
+            if (!w.isClientSide() && w instanceof ServerLevel serverLevel) {
                 run(serverLevel, p, p.blockPosition(), type);
             }
             return InteractionResult.SUCCESS;
@@ -97,7 +97,7 @@ public class NaturalDisastersMod {
     }
 
     private static void run(ServerLevel w, Player p, BlockPos pos, String type) {
-        RandomSource r = w.random;
+        RandomSource r = w.getRandom();
         switch (type) {
             case "tornado":
                 tPos = new Vec3(pos.getX() + 8, pos.getY(), pos.getZ() + 8);
@@ -151,11 +151,9 @@ public class NaturalDisastersMod {
                 for (int i = 0; i < 20; i++) {
                     BlockPos top = w.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,
                             new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
-                    LightningBolt b = EntityType.LIGHTNING_BOLT.create(w);
-                    if (b != null) {
-                        b.moveTo(Vec3.atBottomCenterOf(top));
-                        w.addFreshEntity(b);
-                    }
+                    LightningBolt b = new LightningBolt(EntityType.LIGHTNING_BOLT, w);
+                    b.setPos(Vec3.atBottomCenterOf(top));
+                    w.addFreshEntity(b);
                 }
                 break;
             case "tsunami":
@@ -223,9 +221,9 @@ public class NaturalDisastersMod {
         }
     }
 
-    public static void onTick(TickEvent.LevelTickEvent e) {
-        if (e.phase != TickEvent.Phase.END || !(e.level instanceof ServerLevel w)) return;
-        RandomSource r = w.random;
+    public static void onTick(TickEvent.LevelTickEvent.Post e) {
+        if (!(e.level() instanceof ServerLevel w)) return;
+        RandomSource r = w.getRandom();
 
         if (tTick > 0 && tPos != null) {
             tTick--;
@@ -252,7 +250,7 @@ public class NaturalDisastersMod {
             }
             for (Entity en : w.getEntities(null, new AABB(c).inflate(10, 24, 10))) {
                 en.setDeltaMovement(en.getDeltaMovement().x + (r.nextDouble() - 0.5) * 1.1, 0.75, en.getDeltaMovement().z + (r.nextDouble() - 0.5) * 1.1);
-                en.hurtMarked = true;
+                en.needsSync = true;
             }
         }
 
@@ -266,7 +264,7 @@ public class NaturalDisastersMod {
             }
             for (Entity en : w.getEntities(null, new AABB(c).inflate(18))) {
                 en.setDeltaMovement(bPos.subtract(en.position()).normalize().scale(0.5));
-                en.hurtMarked = true;
+                en.needsSync = true;
             }
         }
     }
