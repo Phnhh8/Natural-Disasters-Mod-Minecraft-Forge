@@ -36,11 +36,13 @@ minecraft {
 }
 
 repositories {
+    minecraft.mavenizer(repositories)
+    maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:26.3-66.1.9'
+    implementation minecraft.dependency('net.minecraftforge:forge:26.3-66.1.9')
 }
 
 tasks.withType(JavaCompile).configureEach {
