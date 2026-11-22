@@ -37,7 +37,8 @@ minecraft {
 
 repositories {
     minecraft.mavenizer(repositories)
-    maven { url = 'https://maven.minecraftforge.net/' }
+    maven { url = 'https://minecraftforge.net' }
+    maven { url = 'https://minecraft.net' }
     mavenCentral()
 }
 
