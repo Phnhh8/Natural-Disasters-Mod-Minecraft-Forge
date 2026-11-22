@@ -2,8 +2,10 @@ package com.example.disasters;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -14,7 +16,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
@@ -148,16 +149,15 @@ public class NaturalDisastersMod {
                 }
                 break;
             case "lightning":
+                var boltType = BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.withDefaultNamespace("lightning_bolt"));
                 for (int i = 0; i < 20; i++) {
                     BlockPos top = w.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,
                             new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
-                    EntityType.byString("minecraft:lightning_bolt").ifPresent(typeObj -> {
-                        var b = typeObj.create(w, EntitySpawnReason.TRIGGERED);
-                        if (b != null) {
-                            b.setPos(Vec3.atBottomCenterOf(top));
-                            w.addFreshEntity(b);
-                        }
-                    });
+                    var b = boltType.create(w, EntitySpawnReason.TRIGGERED);
+                    if (b != null) {
+                        b.setPos(Vec3.atBottomCenterOf(top));
+                        w.addFreshEntity(b);
+                    }
                 }
                 break;
             case "tsunami":
