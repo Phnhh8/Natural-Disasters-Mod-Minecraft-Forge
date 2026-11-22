@@ -1,23 +1,26 @@
 modLoader="javafml"
-loaderVersion="[36,)"
-license="MIT"
+loaderVersion="[66,)"
+license="All Rights Reserved"
 
 [[mods]]
 modId="naturaldisasters"
-version="1.0"
-displayName="Natural Disasters Mod"
-description='''Adds 12 Natural Disasters to Minecraft 1.16.5.'''
+version="1.0.0"
+displayName="Natural Disaster Mod by Phnhh_8"
+authors="Phnhh_8"
+description='''
+Adds 12 destructive natural disasters to Minecraft 26.3.
+'''
 
 [[dependencies.naturaldisasters]]
     modId="forge"
     mandatory=true
-    versionRange="[36,)"
+    versionRange="[66,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.naturaldisasters]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.5,1.17)"
+    versionRange="[26.3,27)"
     ordering="NONE"
     side="BOTH"
