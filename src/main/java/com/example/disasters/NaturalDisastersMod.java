@@ -151,7 +151,7 @@ public class NaturalDisastersMod {
                 for (int i = 0; i < 20; i++) {
                     BlockPos top = w.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING,
                             new BlockPos(pos.getX() + (int) ((r.nextDouble() - 0.5) * 45), 0, pos.getZ() + (int) ((r.nextDouble() - 0.5) * 45)));
-                    LightningBolt b = new LightningBolt(EntityType.LIGHTNING_BOLT, w);
+                    LightningBolt b = new LightningBolt(EntityType.LIGHTNING, w);
                     b.setPos(Vec3.atBottomCenterOf(top));
                     w.addFreshEntity(b);
                 }
