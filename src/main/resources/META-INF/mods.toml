@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[62,)"
+loaderVersion="[64,)"
 license="MIT"
 
 [[mods]]
@@ -12,7 +12,7 @@ description='''Mod tham hoa thien nhien cho Minecraft Forge 26.1.2'''
 [[dependencies.naturaldisasters]]
     modId="forge"
     mandatory=true
-    versionRange="[62,)"
+    versionRange="[64,)"
     ordering="NONE"
     side="BOTH"
 
