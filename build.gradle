@@ -37,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    implementation minecraft.dependency('net.minecraftforge:forge:26.1.2-62.0.2')
+    implementation minecraft.dependency('net.minecraftforge:forge:26.1.2-64.1.6')
 }
 
 tasks.withType(JavaCompile).configureEach {
