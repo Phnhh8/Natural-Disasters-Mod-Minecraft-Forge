@@ -27,10 +27,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -81,11 +80,11 @@ public class NaturalDisastersMod {
     );
 
     public NaturalDisastersMod(FMLJavaModLoadingContext context) {
-        IEventBus modEventBus = context.getModEventBus();
-        ITEMS.register(modEventBus);
-        TABS.register(modEventBus);
+        BusGroup modBusGroup = context.getModBusGroup();
+        ITEMS.register(modBusGroup);
+        TABS.register(modBusGroup);
 
-        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
+        RegisterCommandsEvent.BUS.addListener(event -> {
             event.getDispatcher().register(Commands.literal("disaster").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("type", StringArgumentType.word()).executes(ctx -> {
                     startDisaster(ctx.getSource().getLevel(), StringArgumentType.getString(ctx, "type").toUpperCase(), BlockPos.containing(ctx.getSource().getPosition()));
@@ -93,7 +92,7 @@ public class NaturalDisastersMod {
                 })));
         });
 
-        MinecraftForge.EVENT_BUS.addListener((TickEvent.LevelTickEvent.Post event) -> {
+        TickEvent.LevelTickEvent.Post.BUS.addListener(event -> {
             if (!(event.level() instanceof ServerLevel level) || level.players().isEmpty()) return;
             if (++tickCounter >= 6000) {
                 tickCounter = 0;
