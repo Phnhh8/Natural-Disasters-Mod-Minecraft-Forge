@@ -30,11 +30,10 @@ minecraft {
 }
 
 repositories {
+    minecraft.mavenizer(repositories)
+    maven { url = 'https://' + 'maven.' + 'minecraftforge.net/' }
     mavenCentral()
-    maven {
-        name = 'MinecraftForge'
-        url = 'https://' + 'maven.' + 'minecraftforge.net/'
-    }
+    maven { url = 'https://minecraft.net' }
 }
 
 dependencies {
