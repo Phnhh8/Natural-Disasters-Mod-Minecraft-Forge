@@ -1,4 +1,4 @@
-name: Build Forge Mod
+name: Build 26.1.2 Forge Mod
 
 on:
   push:
